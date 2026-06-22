@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest"
+    "test": "vitest",
+    "test:e2e": "playwright test",
+    "seed": "prisma db seed"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
