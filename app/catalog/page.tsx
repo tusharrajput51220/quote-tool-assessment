@@ -1,4 +1,4 @@
-import { getCatalogs } from "@/lib/api";
+import { getCatalogs } from "@/lib/catalog/getCatalogs";
 import Link from "next/link";
 
 type Catalog = {
