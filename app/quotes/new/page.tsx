@@ -1,6 +1,9 @@
 import { getQuoteBuilderData } from "@/lib/catalog/getQuoteBuilderData";
-
 import CreateQuoteForm from "@/components/quote/CreateQuoteForm";
+
+export type QuoteBuilderProducts = Awaited<
+  ReturnType<typeof getQuoteBuilderData>
+>;
 
 export default async function NewQuotePage() {
   const products = await getQuoteBuilderData();

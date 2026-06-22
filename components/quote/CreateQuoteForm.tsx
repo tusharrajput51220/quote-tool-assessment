@@ -3,39 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-interface TierFeature {
-  id: string;
-  availability: string;
-  pricingModel: string;
-  price: number | string;
-  feature: {
-    id: string;
-    name: string;
-  };
-}
-
-interface Tier {
-  id: string;
-  name: string;
-  tierFeatures: TierFeature[];
-}
-
-interface Product {
-  id: string;
-  name: string;
-  tiers: Tier[];
-}
+import type { QuoteBuilderProducts } from "@/types/quote-builder";
 
 interface SelectedAddon {
   featureId: string;
   featureName: string;
-  pricingModel: string;
+  pricingModel: string | null;
   price: number;
   quantity?: number;
 }
 
 interface Props {
-  products: Product[];
+  products: QuoteBuilderProducts;
 }
 
 export default function CreateQuoteForm({ products }: Props) {
@@ -187,7 +166,7 @@ export default function CreateQuoteForm({ products }: Props) {
                         featureId: addon.feature.id,
                         featureName: addon.feature.name,
                         pricingModel: addon.pricingModel,
-                        price: Number(addon.price),
+                        price: Number(addon.price ?? 0),
                         quantity:
                           addon.pricingModel === "PER_SEAT"
                             ? addonQuantities[addon.feature.id] || 1
