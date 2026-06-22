@@ -8,7 +8,7 @@ export default async function CatalogPage() {
       <h1 className="mb-6 text-3xl font-bold">Catalogs</h1>
 
       <div className="space-y-4">
-        {catalogs.map((catalog: any) => (
+        {catalogs.map((catalog) => (
           <div key={catalog.id} className="rounded border p-4">
             <h2 className="text-xl font-semibold">{catalog.name}</h2>
 

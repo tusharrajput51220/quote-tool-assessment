@@ -1,10 +1,41 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+interface TierFeature {
+  id: string;
+  availability: string;
+  pricingModel: string;
+  price: number | string;
+  feature: {
+    id: string;
+    name: string;
+  };
+}
+
+interface Tier {
+  id: string;
+  name: string;
+  tierFeatures: TierFeature[];
+}
+
+interface Product {
+  id: string;
+  name: string;
+  tiers: Tier[];
+}
+
+interface SelectedAddon {
+  featureId: string;
+  featureName: string;
+  pricingModel: string;
+  price: number;
+  quantity?: number;
+}
+
 interface Props {
-  products: any[];
+  products: Product[];
 }
 
 export default function CreateQuoteForm({ products }: Props) {
@@ -26,13 +57,12 @@ export default function CreateQuoteForm({ products }: Props) {
 
   const selectedProduct = products.find((p) => p.id === productId);
 
-  const selectedTier = selectedProduct?.tiers.find((t: any) => t.id === tierId);
+  const selectedTier = selectedProduct?.tiers.find((t) => t.id === tierId);
 
   const availableAddons =
-    selectedTier?.tierFeatures.filter((f: any) => f.availability === "ADDON") ??
-    [];
+    selectedTier?.tierFeatures.filter((f) => f.availability === "ADDON") ?? [];
 
-  const [selectedAddons, setSelectedAddons] = useState<any[]>([]);
+  const [selectedAddons, setSelectedAddons] = useState<SelectedAddon[]>([]);
 
   const [addonQuantities, setAddonQuantities] = useState<
     Record<string, number>
@@ -49,7 +79,6 @@ export default function CreateQuoteForm({ products }: Props) {
       quoteDiscount,
       addons: selectedAddons.map((addon) => ({
         ...addon,
-
         quantity:
           addon.pricingModel === "PER_SEAT"
             ? addonQuantities[addon.featureId] || 1
@@ -91,7 +120,6 @@ export default function CreateQuoteForm({ products }: Props) {
         value={productId}
         onChange={(e) => {
           setProductId(e.target.value);
-
           setTierId("");
         }}
       >
@@ -111,7 +139,7 @@ export default function CreateQuoteForm({ products }: Props) {
       >
         <option value="">Select Tier</option>
 
-        {selectedProduct?.tiers.map((tier: any) => (
+        {selectedProduct?.tiers.map((tier) => (
           <option key={tier.id} value={tier.id}>
             {tier.name}
           </option>
@@ -131,9 +159,7 @@ export default function CreateQuoteForm({ products }: Props) {
         onChange={(e) => setTermLength(e.target.value)}
       >
         <option value="MONTHLY">Monthly</option>
-
         <option value="ANNUAL">Annual</option>
-
         <option value="TWO_YEAR">Two Year</option>
       </select>
 
@@ -148,7 +174,7 @@ export default function CreateQuoteForm({ products }: Props) {
       <div>
         <h3 className="mb-2 font-semibold">Available Add-ons</h3>
 
-        {availableAddons.map((addon: any) => (
+        {availableAddons.map((addon) => (
           <div key={addon.id} className="mb-4 rounded border p-3">
             <label className="flex items-center gap-2">
               <input
@@ -159,13 +185,9 @@ export default function CreateQuoteForm({ products }: Props) {
                       ...prev,
                       {
                         featureId: addon.feature.id,
-
                         featureName: addon.feature.name,
-
                         pricingModel: addon.pricingModel,
-
                         price: Number(addon.price),
-
                         quantity:
                           addon.pricingModel === "PER_SEAT"
                             ? addonQuantities[addon.feature.id] || 1
