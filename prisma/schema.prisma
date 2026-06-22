@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PricingModel {
+  FIXED
+  PER_SEAT
+  PERCENTAGE
+}
+
+enum FeatureAvailability {
+  INCLUDED
+  ADDON
+  NOT_AVAILABLE
+}
+
+enum TermLength {
+  MONTHLY
+  ANNUAL
+  TWO_YEAR
+}
+
+enum LineItemType {
+  BASE_PRODUCT
+  ADDON
+  DISCOUNT
+}
+
+model Product {
+  id        String   @id @default(cuid())
+  name      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tiers     Tier[]
+  features  Feature[]
+  quotes    Quote[]
+}
+
+model Tier {
+  id        String   @id @default(cuid())
+  name      String
+
+  /// USD per seat per month
+  basePrice Decimal @db.Decimal(10, 2)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tierFeatures TierFeature[]
+  quotes       Quote[]
+}
+
+model Feature {
+  id        String @id @default(cuid())
+  name      String
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tierFeatures TierFeature[]
+  quoteAddons  QuoteAddon[]
+}
+
+model TierFeature {
+  id String @id @default(cuid())
+
+  tierId String
+  tier   Tier @relation(fields: [tierId], references: [id], onDelete: Cascade)
+
+  featureId String
+  feature   Feature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  availability FeatureAvailability
+
+  /// Only applicable when availability = ADDON
+  pricingModel PricingModel?
+
+  /// Price value
+  ///
+  /// FIXED      -> 200 means $200/month
+  /// PER_SEAT   -> 50 means $50/seat/month
+  /// PERCENTAGE -> 10 means 10%
+  price Decimal? @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tierId, featureId])
+}
+
+model Quote {
+  id String @id @default(cuid())
+
+  /// Public shareable URL identifier
+  publicId String @unique
+
+  customerName String
+  quoteName    String
+
+  quoteDate  DateTime @default(now())
+  validUntil DateTime
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  tierId String
+  tier   Tier @relation(fields: [tierId], references: [id])
+
+  seats Int
+
+  termLength TermLength
+
+  /// Optional quote-level discount
+  quoteDiscount Decimal? @db.Decimal(5, 2)
+
+  subtotal Decimal @db.Decimal(12, 2)
+  total    Decimal @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  addons    QuoteAddon[]
+  lineItems QuoteLineItem[]
+}
+
+model QuoteAddon {
+  id String @id @default(cuid())
+
+  quoteId String
+  quote   Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  featureId String
+  feature   Feature @relation(fields: [featureId], references: [id])
+
+  /// Independent quantity
+  ///
+  /// Example:
+  /// Product Seats = 25
+  /// API Access Seats = 5
+  quantity Int?
+
+  amount Decimal @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now())
+
+  lineItemId String?
+  lineItem   QuoteLineItem? @relation(fields: [lineItemId], references: [id])
+}
+
+model QuoteLineItem {
+  id String @id @default(cuid())
+
+  quoteId String
+  quote   Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  type LineItemType
+
+  /// Example:
+  /// Analytics Suite - Growth Tier
+  /// Single Sign-On (SSO)
+  /// Annual Discount
+  title String
+
+  /// Example:
+  /// 25 seats × $50 × 12 × (1 - 15%)
+  calculation String
+
+  /// Optional note shown in quote
+  note String?
+
+  amount Decimal @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now())
+
+  quoteAddon QuoteAddon[]
+}
